@@ -62,3 +62,25 @@ textarea{
   width: 100%;
   padding: 10px;
 }
+/* SINGLEPOST */
+
+.article_singlepost{
+  max-width: 500px;
+  padding: 1rem;
+}
+
+/* HEADER */
+
+header{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #515151;
+}
+header ul{
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+}
