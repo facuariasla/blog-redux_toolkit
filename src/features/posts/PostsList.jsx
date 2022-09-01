@@ -1,32 +1,50 @@
+import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { selectAllPosts } from "./postsSlice";
+import {
+  selectAllPosts,
+  getPostsStatus,
+  getPostsError,
+  fetchPosts,
+} from "./postsSlice";
 
 import PostAuthor from "./PostAuthor";
 import TimeAgo from "./TimeAgo";
 import ReactionButtons from "./ReactionButtons";
+import PostsExcerpt from "./PostsExcerpt";
 
 const PostsList = () => {
-  // La diferencia entre estos 2, es que si el state cambia, solo necesitaremos hacer cambios en el slice, y no en cada componente (?)
+  const dispatch = useDispatch();
+  // el llamado a state.posts ya se hizo en el slice
   // const posts = useSelector(state => state.posts);
   const posts = useSelector(selectAllPosts);
-  const orderedPosts = posts
-    .slice()
-    .sort((a, b) => b.date.localeCompare(a.date));
+  const postsStatus = useSelector(getPostsStatus);
+  const error = useSelector(getPostsError);
 
-  const renderedPosts = orderedPosts.map((post) => (
-    <article key={post.id}>
-      <h3>{post.title}</h3>
-      <p>{post.content.substring(0, 100)}</p>
-      <PostAuthor userId={post.userId} />
-      <TimeAgo timestamp={post.date} />
-      <ReactionButtons post={post} />
-    </article>
-  ));
+  useEffect(() => {
+    if (postsStatus === "idle") {
+      dispatch(fetchPosts());
+    }
+  }, [postsStatus, dispatch]);
 
+  let content;
+  if (postsStatus === "loading") {
+    content = <p>"Loading..."</p>;
+  } else if (postsStatus === "succeded") {
+    const orderedPosts = posts
+      .slice()
+      .sort((a, b) => b.date.localeCompare(a.date));
+    content = orderedPosts.map((post) => (
+      // Si uso el post.id en key, se rompe xq se repiten ids
+      <PostsExcerpt key={post.id} post={post} />
+    ));
+  } else if (postsStatus === "failed") {
+    content = <p>{error}</p>;
+  }
+  
   return (
     <section className="post_section">
       <h2>Posts</h2>
-      {renderedPosts}
+      {content}
     </section>
   );
 };

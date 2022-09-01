@@ -1,23 +1,36 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { postAdded } from "./postsSlice";
+import { addNewPost } from "./postsSlice";
 import { selectAllUsers } from "../users/usersSlice";
 
 const AddPostForm = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [userId, setUserId] = useState("");
-
-  const users = useSelector(selectAllUsers);
+  const [addRequestStatus, setAddRequestStatus] = useState("idle");
 
   const dispatch = useDispatch();
+  const users = useSelector(selectAllUsers);
+
+  // Chequea que title, content, userId sean 'true', que existan valores
+  // Ya que Boolean('') es false, y Boolean('asd') es true
+  const canSave =
+    [title, content, userId].every(Boolean) && addRequestStatus === "idle";
 
   const onSavePostClicked = () => {
-    console.log({ title, content, userId });
-    if (title && content) {
-      dispatch(postAdded(title, content, userId));
-      setTitle("");
-      setContent("");
+    if (canSave) {
+      try {
+        setAddRequestStatus("pending");
+        dispatch(addNewPost({ title, body: content, userId })).unwrap();
+        // .unwrap() -> Handling Thunk Results ver
+        setTitle("");
+        setContent("");
+        setUserId("");
+      } catch (error) {
+        console.error("Failed to save the post", error);
+      } finally {
+        setAddRequestStatus("idle");
+      }
     }
   };
 
@@ -26,8 +39,6 @@ const AddPostForm = () => {
       {user.name}
     </option>
   ));
-
-  const canSave = Boolean(title) && Boolean(content) && Boolean(userId);
 
   return (
     <section>
